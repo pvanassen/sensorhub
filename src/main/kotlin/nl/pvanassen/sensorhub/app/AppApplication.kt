@@ -47,7 +47,8 @@ val app = application(WebApplicationType.REACTIVE) {
 			GET("/api/sensor", handler::listSensors)
 			GET("/api/sensor/{id}", handler::getSensor)
 			POST("/api/sensor/{id}", handler::updateSensor)
-			resources("/**", ClassPathResource("frontend/dist/"))
+			resources("/", ClassPathResource("dist/"))
+			resources("/**", ClassPathResource("dist/"))
 		}
 		codecs {
 			jackson()
