@@ -1,6 +1,7 @@
 package nl.pvanassen.sensorhub.app.service
 
 import nl.pvanassen.sensorhub.app.model.EmptySensor
+import nl.pvanassen.sensorhub.app.model.NamedSensor
 import nl.pvanassen.sensorhub.app.model.NamedSensorUpdate
 import nl.pvanassen.sensorhub.app.model.Sensor
 import nl.pvanassen.sensorhub.app.repository.SensorEntity
@@ -15,6 +16,10 @@ class NameResolverService(private val sensorHubRepository: SensorHubRepository) 
                     .flatMap { updateLastContact(it) }
                     .switchIfEmpty(saveButReturnEmpty(sensor))
                     .map { map(it, sensor) }
+
+    fun get(id: String): Mono<NamedSensor<EmptySensor>> =
+            sensorHubRepository.findById(id)
+                    .map { mapEmpty(it) }
 
     fun get(): Flux<NamedSensor<EmptySensor>> =
         sensorHubRepository.findAll()
@@ -39,6 +44,6 @@ class NameResolverService(private val sensorHubRepository: SensorHubRepository) 
             map(sensorEntity, EmptySensor(sensorEntity.id))
 
     private fun <T: Sensor> map(sensorEntity: SensorEntity, sensor: T): NamedSensor<T> =
-        NamedSensor(sensor = sensor, name = sensorEntity.name, domoticsId = sensorEntity.domoticsId, lastContact = sensorEntity.lastContact)
+            NamedSensor(sensor = sensor, name = sensorEntity.name, domoticsId = sensorEntity.domoticsId, lastContact = sensorEntity.lastContact)
 
 }

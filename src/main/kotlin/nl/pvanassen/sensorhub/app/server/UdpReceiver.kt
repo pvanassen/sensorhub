@@ -6,7 +6,7 @@ import nl.pvanassen.sensorhub.app.client.StatsdClient
 import nl.pvanassen.sensorhub.app.model.Sensor
 import nl.pvanassen.sensorhub.app.model.TemperatureSensor
 import nl.pvanassen.sensorhub.app.service.NameResolverService
-import nl.pvanassen.sensorhub.app.service.NamedSensor
+import nl.pvanassen.sensorhub.app.model.NamedSensor
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono

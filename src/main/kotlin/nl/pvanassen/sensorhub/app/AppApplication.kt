@@ -36,8 +36,9 @@ val app = application(WebApplicationType.REACTIVE) {
 		port = 8080
 		router {
 			val handler = ref<SensorHubHandler>()
-			GET("/", handler::listSensors)
-			POST("/update/{id}", handler::updateSensor)
+			GET("/api/sensor", handler::listSensors)
+			GET("/api/sensor/{id}", handler::getSensor)
+			POST("/api/sensor/{id}", handler::updateSensor)
 		}
 		codecs {
 			jackson()

@@ -2,7 +2,7 @@ package nl.pvanassen.sensorhub.app.client
 
 import nl.pvanassen.sensorhub.app.model.Sensor
 import nl.pvanassen.sensorhub.app.model.TemperatureSensor
-import nl.pvanassen.sensorhub.app.service.NamedSensor
+import nl.pvanassen.sensorhub.app.model.NamedSensor
 import reactor.core.publisher.Mono
 import reactor.netty.udp.UdpClient
 import reactor.netty.udp.UdpInbound

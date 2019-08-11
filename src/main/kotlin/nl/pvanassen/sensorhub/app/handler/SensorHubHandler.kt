@@ -15,6 +15,11 @@ class SensorHubHandler(private val nameResolverService: NameResolverService) {
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(nameResolverService.get())
 
+    fun getSensor(request: ServerRequest) =
+        ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(nameResolverService.get(request.pathVariable("id")))
+
     fun updateSensor(request: ServerRequest) =
             request.bodyToMono(NamedSensorUpdate::class.java)
                     .map { nameResolverService.update(request.pathVariable("id"), it) }

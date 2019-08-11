@@ -1,0 +1,23 @@
+<p>update works!</p>
+<div *ngIf="sensor$ | async as sensor">
+  <p>{{sensor.id}}</p>
+  <form [formGroup]="sensorForm" (ngSubmit)="onSubmit(sensorForm.value)">
+
+    <div>
+      <label for="name">
+        Name
+      </label>
+      <input id="name" type="text" formControlName="name" value="{{sensor.name}}">
+    </div>
+
+    <div>
+      <label for="domoticsId">
+        DomoticsId
+      </label>
+      <input id="domoticsId" type="text" formControlName="domoticsId" value="{{sensor.domoticsId}}">
+    </div>
+
+    <button class="button" type="submit">Update</button>
+
+  </form>
+</div>

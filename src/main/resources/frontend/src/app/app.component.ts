@@ -1,4 +1,7 @@
-import { Component } from '@angular/core';
+import {Component, Directive, EventEmitter, Input, OnInit, Output, QueryList, ViewChildren} from '@angular/core';
+import {SensorService} from "./sensor.service";
+import {timer} from "rxjs";
+import {flatMap, switchMap} from "rxjs/operators";
 
 @Component({
   selector: 'app-root',
@@ -6,5 +9,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'frontend';
+
 }
