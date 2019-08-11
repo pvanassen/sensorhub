@@ -8,8 +8,6 @@ import nl.pvanassen.sensorhub.app.model.TemperatureSensor
 import nl.pvanassen.sensorhub.app.service.NameResolverService
 import nl.pvanassen.sensorhub.app.service.NamedSensor
 import org.reactivestreams.Publisher
-import org.springframework.context.annotation.Configuration
-import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
@@ -17,8 +15,9 @@ import reactor.core.scheduler.Schedulers
 import reactor.netty.udp.UdpInbound
 import reactor.netty.udp.UdpOutbound
 import reactor.netty.udp.UdpServer
-import java.lang.IllegalArgumentException
-import javax.annotation.PostConstruct
+import java.net.Inet4Address
+import java.net.NetworkInterface
+import kotlin.streams.toList
 
 class UdpReceiver(private val nameResolverService: NameResolverService,
                   private val domoticsClient: DomoticsClient,
@@ -27,13 +26,26 @@ class UdpReceiver(private val nameResolverService: NameResolverService,
     private val logger = KotlinLogging.logger {}
 
     fun init() {
-        UdpServer.create()
-                .host("192.168.0.40")
-                .port(1234)
-                .handle { i: UdpInbound?, _: UdpOutbound? -> handleUdp(i!!) }
-                .bind()
-                .subscribeOn(Schedulers.elastic())
-                .subscribe()
+        for (address in getExternalIp()) {
+            UdpServer.create()
+                    .host(address)
+                    .port(1234)
+                    .handle { i: UdpInbound?, _: UdpOutbound? -> handleUdp(i!!) }
+                    .bind()
+                    .subscribeOn(Schedulers.elastic())
+                    .subscribe()
+        }
+    }
+
+    private fun getExternalIp(): List<String> {
+        return NetworkInterface.networkInterfaces()
+                .filter { it.isUp }
+                .flatMap { it.interfaceAddresses.stream() }
+                .map { it.address }
+                .filter { !it.isLoopbackAddress }
+                .filter { it is Inet4Address }
+                .map {it.hostAddress }
+                .toList()
     }
 
     private fun handleUdp(input: UdpInbound): Publisher<Void> {
