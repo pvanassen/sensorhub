@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.findById
 
 class SensorHubRepository(private val template: ReactiveMongoTemplate) {
 
-    fun findById(macAddress: String) = template.findById<SensorEntity>(macAddress)
+    fun findById(id: String) = template.findById<SensorEntity>(id)
 
     fun findAll() = template.findAll<SensorEntity>()
 

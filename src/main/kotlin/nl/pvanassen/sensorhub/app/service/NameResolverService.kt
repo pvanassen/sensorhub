@@ -7,24 +7,38 @@ import nl.pvanassen.sensorhub.app.repository.SensorEntity
 import nl.pvanassen.sensorhub.app.repository.SensorHubRepository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.time.LocalDateTime
 
 class NameResolverService(private val sensorHubRepository: SensorHubRepository) {
     fun getOrCreate(sensor: Sensor): Mono<NamedSensor<Sensor>> =
-            sensorHubRepository.findById(sensor.macAddress)
+            sensorHubRepository.findById(sensor.id)
+                    .flatMap { updateLastContact(it) }
                     .switchIfEmpty(saveButReturnEmpty(sensor))
-                    .map { NamedSensor(sensor, it.name, it.domoticsId) }
+                    .map { map(it, sensor) }
 
     fun get(): Flux<NamedSensor<EmptySensor>> =
         sensorHubRepository.findAll()
-                .map { NamedSensor(EmptySensor(it.macAddress), it.name, it.domoticsId) }
+                .map { mapEmpty(it) }
+
+    private fun updateLastContact(sensorEntity: SensorEntity): Mono<SensorEntity> =
+        sensorHubRepository.save(sensorEntity.copy(lastContact = LocalDateTime.now()))
+
 
     private fun saveButReturnEmpty(sensor: Sensor): Mono<SensorEntity> {
-        return Mono.defer { sensorHubRepository.save(SensorEntity(sensor.macAddress, sensor.macAddress, 0)) }
+        return Mono.defer { sensorHubRepository.save(SensorEntity(sensor.id, sensor.id, 0, LocalDateTime.now())) }
                 .flatMap { Mono.empty<SensorEntity>() }
     }
 
-    fun update(macAddress: String, sensorUpdate: NamedSensorUpdate): Mono<NamedSensor<EmptySensor>> =
-        sensorHubRepository.save(SensorEntity(macAddress, sensorUpdate.name, sensorUpdate.domoticsId))
-                .map { NamedSensor(EmptySensor(it.macAddress), it.name, it.domoticsId)}
+    fun update(id: String, sensorUpdate: NamedSensorUpdate): Mono<NamedSensor<EmptySensor>> =
+            sensorHubRepository.findById(id)
+                    .map { it.copy(name = sensorUpdate.name, domoticsId = sensorUpdate.domoticsId) }
+                    .flatMap { sensorHubRepository.save(it) }
+                    .map { mapEmpty(it) }
+
+    private fun mapEmpty(sensorEntity: SensorEntity): NamedSensor<EmptySensor> =
+            map(sensorEntity, EmptySensor(sensorEntity.id))
+
+    private fun <T: Sensor> map(sensorEntity: SensorEntity, sensor: T): NamedSensor<T> =
+        NamedSensor(sensor = sensor, name = sensorEntity.name, domoticsId = sensorEntity.domoticsId, lastContact = sensorEntity.lastContact)
 
 }

@@ -1,3 +1,5 @@
 package nl.pvanassen.sensorhub.app.model
 
-open class Sensor(open val macAddress: String)
+abstract class Sensor {
+    abstract val id: String
+}

@@ -8,12 +8,16 @@ import nl.pvanassen.sensorhub.app.model.TemperatureSensor
 import nl.pvanassen.sensorhub.app.service.NameResolverService
 import nl.pvanassen.sensorhub.app.service.NamedSensor
 import org.reactivestreams.Publisher
+import org.springframework.context.annotation.Configuration
+import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
+import reactor.core.scheduler.Schedulers
 import reactor.netty.udp.UdpInbound
 import reactor.netty.udp.UdpOutbound
 import reactor.netty.udp.UdpServer
+import java.lang.IllegalArgumentException
 import javax.annotation.PostConstruct
 
 class UdpReceiver(private val nameResolverService: NameResolverService,
@@ -22,12 +26,14 @@ class UdpReceiver(private val nameResolverService: NameResolverService,
 
     private val logger = KotlinLogging.logger {}
 
-    @PostConstruct
     fun init() {
         UdpServer.create()
+                .host("192.168.0.40")
                 .port(1234)
-                .handle {i: UdpInbound?, _: UdpOutbound? -> handleUdp(i!!) }
+                .handle { i: UdpInbound?, _: UdpOutbound? -> handleUdp(i!!) }
                 .bind()
+                .subscribeOn(Schedulers.elastic())
+                .subscribe()
     }
 
     private fun handleUdp(input: UdpInbound): Publisher<Void> {
@@ -41,24 +47,41 @@ class UdpReceiver(private val nameResolverService: NameResolverService,
     }
 
     private fun createTemperatureSensorList(line: String) =
-        Flux.just(line)
-                .flatMap { it.splitToSequence("\n").toFlux() }
-                .map { createTemperatureSensor(it) }
+            Flux.just(line)
+                    .flatMap { it.splitToSequence("\n").toFlux() }
+                    .map { createTemperatureSensor(it) }
 
 
     private fun createTemperatureSensor(line: String): TemperatureSensor {
+        logger.info { "Received $line" }
         val split = line.splitToSequence("|").toList()
-        val mac = split.get(0)
-        val temperature = split.get(1).toFloat()
-        val humidity = split.get(2).toFloat()
-        return TemperatureSensor(mac, temperature, humidity)
+        val prefix = split[0]
+        if (prefix != "t") {
+            throw IllegalArgumentException("Can't yet handle $prefix")
+        }
+        val id = split[1]
+        val temperature = split[2].toFloat()
+        val humidity = split[3].toFloat()
+        return TemperatureSensor(id = id, temperature = temperature, humidity = humidity)
     }
 
-    private fun actions(namedSensor: Mono<NamedSensor<Sensor>>) =
-            Flux.merge(domoticsClient.sendTemperature(namedSensor),
-                    statsdClient.sendTemperature(namedSensor))
-                    .collectList()
-                    .map { isSuccess(it) }
+    private fun actions(namedSensor: Mono<NamedSensor<Sensor>>): Mono<Boolean> {
+        return namedSensor.flatMap {
+            if (it.name == it.sensor.id) {
+                Mono.empty()
+            } else {
+                Mono.just(it)
+            }
+        }
+                .flux()
+                .flatMap {
+                    Flux.merge(domoticsClient.sendTemperature(namedSensor),
+                            statsdClient.sendTemperature(namedSensor))
+                }
+                .collectList()
+                .map { isSuccess(it) }
+                .switchIfEmpty(Mono.just(true))
+    }
 
     private fun isSuccess(results: List<Boolean>) =
             results.stream()
@@ -68,6 +91,3 @@ class UdpReceiver(private val nameResolverService: NameResolverService,
                     .orElse(false)
 
 }
-
-// String(locatie) + ".temperature:" + String(t) + "|g\n" + String(locatie) + ".humidity:" + String(h) + "|g"
-// aa:bb:cc:dd:ee:ff|12.2|30\n
