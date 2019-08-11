@@ -1,4 +1,5 @@
 package nl.pvanassen.sensorhub.app.config
 
-class SensorHubConfig() {
+data class SensorHubConfig(val embededMongo: Boolean) {
+
 }
