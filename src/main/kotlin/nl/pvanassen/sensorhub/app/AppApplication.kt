@@ -1,11 +1,13 @@
 package nl.pvanassen.sensorhub.app
 
 import nl.pvanassen.sensorhub.app.client.DomoticsClient
+import nl.pvanassen.sensorhub.app.client.GraphiteClient
 import nl.pvanassen.sensorhub.app.client.StatsdClient
 import nl.pvanassen.sensorhub.app.config.SensorHubConfig
 import nl.pvanassen.sensorhub.app.handler.SensorHubHandler
 import nl.pvanassen.sensorhub.app.repository.SensorHubRepository
 import nl.pvanassen.sensorhub.app.server.UdpReceiver
+import nl.pvanassen.sensorhub.app.service.GraphiteService
 import nl.pvanassen.sensorhub.app.service.NameResolverService
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -26,6 +28,8 @@ val app = application(WebApplicationType.REACTIVE) {
 		bean<DomoticsClient>()
 		bean<StatsdClient>()
 		bean<UdpReceiver>()
+		bean<GraphiteService>()
+		bean<GraphiteClient>()
 	}
 	listener<ApplicationReadyEvent> {
 		ref<UdpReceiver>().init()
@@ -47,7 +51,7 @@ val app = application(WebApplicationType.REACTIVE) {
 			GET("/api/sensor", handler::listSensors)
 			GET("/api/sensor/{id}", handler::getSensor)
 			POST("/api/sensor/{id}", handler::updateSensor)
-			resources("/", ClassPathResource("dist/"))
+			resources("/", ClassPathResource("dist/index.html"))
 			resources("/**", ClassPathResource("dist/"))
 		}
 		codecs {

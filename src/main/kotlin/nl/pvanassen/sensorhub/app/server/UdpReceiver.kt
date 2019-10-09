@@ -3,10 +3,11 @@ package nl.pvanassen.sensorhub.app.server
 import mu.KotlinLogging
 import nl.pvanassen.sensorhub.app.client.DomoticsClient
 import nl.pvanassen.sensorhub.app.client.StatsdClient
+import nl.pvanassen.sensorhub.app.model.NamedSensor
 import nl.pvanassen.sensorhub.app.model.Sensor
 import nl.pvanassen.sensorhub.app.model.TemperatureSensor
+import nl.pvanassen.sensorhub.app.service.GraphiteService
 import nl.pvanassen.sensorhub.app.service.NameResolverService
-import nl.pvanassen.sensorhub.app.model.NamedSensor
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -21,7 +22,8 @@ import kotlin.streams.toList
 
 class UdpReceiver(private val nameResolverService: NameResolverService,
                   private val domoticsClient: DomoticsClient,
-                  private val statsdClient: StatsdClient) {
+                  private val statsdClient: StatsdClient,
+                  private val graphiteService: GraphiteService) {
 
     private val logger = KotlinLogging.logger {}
 
@@ -88,7 +90,8 @@ class UdpReceiver(private val nameResolverService: NameResolverService,
                 .flux()
                 .flatMap {
                     Flux.merge(domoticsClient.sendTemperature(namedSensor),
-                            statsdClient.sendTemperature(namedSensor))
+                            statsdClient.sendSensor(namedSensor),
+                            graphiteService.storeStats(namedSensor))
                 }
                 .collectList()
                 .map { isSuccess(it) }
