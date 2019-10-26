@@ -29,6 +29,7 @@ val app = application(WebApplicationType.REACTIVE) {
 		bean<UdpReceiver>()
 		bean<GraphiteService>()
 		bean<GraphiteTcpClient>()
+		bean<RedirectFilter>()
 	}
 	listener<ApplicationReadyEvent> {
 		ref<UdpReceiver>().init()
@@ -50,8 +51,8 @@ val app = application(WebApplicationType.REACTIVE) {
 			GET("/api/sensor", handler::listSensors)
 			GET("/api/sensor/{id}", handler::getSensor)
 			POST("/api/sensor/{id}", handler::updateSensor)
-			resources("/", ClassPathResource("dist/index.html"))
-			resources("/**", ClassPathResource("dist/"))
+			resources("/", ClassPathResource("frontend/index.html"))
+			resources("/**", ClassPathResource("frontend/"))
 		}
 		codecs {
 			jackson()
