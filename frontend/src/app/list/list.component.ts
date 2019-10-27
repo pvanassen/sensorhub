@@ -46,7 +46,7 @@ export class ListComponent implements OnInit {
   }
 
   ngOnInit() {
-    timer(0, 1000)
+    timer(0, 15000)
       .pipe(
         switchMap(_ => this.sensorService.getSensors())
       )

@@ -13,6 +13,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 class GraphiteService(graphiteClient: GraphiteClient) {
@@ -45,14 +46,14 @@ class GraphiteService(graphiteClient: GraphiteClient) {
 
     fun storeStats(namedSensor: Mono<NamedSensor<SensorId>>): Mono<Boolean> {
         return namedSensor
-                .map { TimedSensor<SensorId>(it, getTimestamp()) }
+                .map { TimedSensor(it, getTimestamp()) }
                 .map { store(it) }
                 .map { true}
     }
 
     private fun getTimestamp(): Long {
         val now = LocalDateTime.now().withNano(0)
-        return now.withSecond((now.second / 5.0).roundToInt() * 5)
+        return now.withSecond(min(59, (now.second / 5.0).roundToInt() * 5))
                 .toEpochSecond(ZoneOffset.UTC)
     }
 

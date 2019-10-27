@@ -20,5 +20,9 @@
             <groupId>nl.pvanassen.sensorhub</groupId>
             <artifactId>common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.github.microutils</groupId>
+            <artifactId>kotlin-logging</artifactId>
+        </dependency>
     </dependencies>
 </project>
