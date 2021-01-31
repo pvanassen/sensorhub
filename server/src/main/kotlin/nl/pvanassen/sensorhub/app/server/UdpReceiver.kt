@@ -90,7 +90,7 @@ class UdpReceiver(private val nameResolverService: NameResolverService,
                 .flux()
                 .flatMap {
                     Flux.merge(domoticsClient.sendTemperature(namedSensor),
-                            statsdClient.sendSensor(namedSensor),
+//                            statsdClient.sendSensor(namedSensor),
                             graphiteService.storeStats(namedSensor))
                 }
                 .collectList()

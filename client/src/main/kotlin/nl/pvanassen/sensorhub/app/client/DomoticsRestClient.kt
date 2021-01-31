@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono
 
 class DomoticsRestClient: DomoticsClient {
 
-    private val client = WebClient.create("http://192.168.0.2:9080")
+    private val client = WebClient.create("http://192.168.178.3:9080")
 
     override fun sendTemperature(namedSensor: Mono<NamedSensor<SensorId>>): Mono<Boolean> {
         return namedSensor.map { path(it) }

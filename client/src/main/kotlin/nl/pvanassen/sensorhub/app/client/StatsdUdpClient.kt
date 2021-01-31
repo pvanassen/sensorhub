@@ -11,7 +11,7 @@ import reactor.netty.udp.UdpOutbound
 class StatsdUdpClient: StatsdClient {
     override fun sendSensor(namedSensor: Mono<NamedSensor<SensorId>>): Mono<Boolean> {
         return UdpClient.create()
-                .host("192.168.0.2")
+                .host("192.168.178.3")
                 .port(8125)
                 .handle {_: UdpInbound?, u: UdpOutbound? -> u?.sendString(createStatdString(namedSensor)) }
                 .connect()
